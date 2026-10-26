@@ -1049,9 +1049,10 @@
         }
         function clearChatHistory() {
             if (!confirm('确定要清空所有对话记录吗？此操作不可撤销。')) return;
-            // 使用 while 循环确保所有 .message 元素都被删除
-            while (chatArea.querySelector('.message')) {
-                chatArea.querySelector('.message').remove();
+            const messages = chatArea.querySelectorAll('.message');
+            // 保留第一条欢迎消息，删除其余所有消息
+            for (let i = 1; i < messages.length; i++) {
+                messages[i].remove();
             }
             conversationId = '';
             updateMessageCount();
