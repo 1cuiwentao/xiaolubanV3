@@ -101,13 +101,19 @@
             position: relative;
             -webkit-overflow-scrolling: touch;
         }
-        .chat-area.has-bg {
+        .chat-area.has-bg, .chat-area {
             background-color: transparent;
             background-blend-mode: normal;
-            background-image: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)), var(--bg-image);
+            background-image: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5)), url('小鲁班智慧体.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
-        [data-theme="dark"] .chat-area.has-bg {
-            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), var(--bg-image);
+        [data-theme="dark"] .chat-area.has-bg, [data-theme="dark"] .chat-area {
+            background-image: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url('小鲁班智慧体.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
         .chat-area > * {
             position: relative;
@@ -723,7 +729,7 @@
             <div class="user-avatar" id="userMenuBtn" style="cursor:pointer;" title="个人中心" data-tip="个人中心">👤</div>
             <button class="settings-btn" id="clearChatBtn" title="清空对话" data-tip="清空对话">🗑️</button>
             <button class="settings-btn" id="exportChatBtn" title="导出记录" data-tip="导出记录">📤</button>
-            <button class="settings-btn" id="openSettingsBtn" title="设置" data-tip="设置">️</button>
+            <button class="settings-btn" id="openSettingsBtn" title="设置" data-tip="设置">⚙️</button>
             <button class="settings-btn" id="themeToggleBtn" title="切换主题" data-tip="切换主题">🎨</button>
         </div>
     </div>
@@ -1116,9 +1122,25 @@
         function showTip(el, text) {
             clearTimeout(hideTimer);
             tip.textContent = text;
+            tip.style.left = '0';
+            tip.style.top = '0';
             const rect = el.getBoundingClientRect();
-            tip.style.left = (rect.left + rect.width / 2 - tip.offsetWidth / 2) + 'px';
-            tip.style.top = (rect.bottom + 6) + 'px';
+            const tipWidth = tip.offsetWidth || 100;
+            const tipHeight = tip.offsetHeight || 30;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            // 水平居中，但不超出屏幕
+            let left = rect.left + rect.width / 2 - tipWidth / 2;
+            left = Math.max(8, Math.min(left, viewportWidth - tipWidth - 8));
+            // 如果元素在屏幕下半部分，tooltip 显示在上方；否则显示在下方
+            let top;
+            if (rect.bottom + tipHeight + 10 > viewportHeight) {
+                top = rect.top - tipHeight - 6;
+            } else {
+                top = rect.bottom + 6;
+            }
+            tip.style.left = left + 'px';
+            tip.style.top = top + 'px';
             tip.classList.add('visible');
         }
         function hideTip() {
