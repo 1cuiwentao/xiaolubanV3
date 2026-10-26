@@ -197,6 +197,22 @@
             background-color: rgba(128,128,128,0.1);
         }
 
+        /* 消息计数条 */
+        .message-count-bar {
+            text-align: center;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            padding: 6px 0;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-chat);
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+        [data-theme="dark"] .message-count-bar {
+            color: #64748b;
+        }
+
         /* 思考块样式（第一版） */
         .thinking-block {
             margin-bottom: 10px;
@@ -683,11 +699,14 @@
         <div class="user-info">
             <div class="user-avatar" id="userAvatar">👤</div>
             <button class="user-btn" id="userMenuBtn">我的</button>
+            <button class="settings-btn" id="exportChatBtn" title="导出聊天记录">📤</button>
+            <button class="settings-btn" id="clearChatBtn" title="清空对话">🗑️</button>
             <button class="settings-btn" id="openSettingsBtn">⚙️</button>
             <button class="settings-btn" id="themeToggleBtn" style="margin-left: 8px;">🎨 主题</button>
         </div>
     </div>
     <div class="chat-area" id="chatArea">
+        <div class="message-count-bar" id="messageCountBar">共 0 条消息</div>
         <div class="message assistant">
             <div class="bubble">
                 👋 欢迎回来！<span id="welcomeUser"></span> 我是小鲁班，你的智能助手。 支持语音输入🎙️，点击➕展开拍照📷、文件📎、扫码📱功能。
@@ -992,11 +1011,50 @@
         function createAssistantMessageContainer(){ /* 第一版逻辑 */ const div=document.createElement('div'); div.className='message assistant'; const bubble=document.createElement('div'); bubble.className='bubble'; div.appendChild(bubble); const thinkingBlock=document.createElement('div'); thinkingBlock.className='thinking-block'; const header=document.createElement('div'); header.className='thinking-header'; header.innerHTML='🧠 问题思考'; const timerSpan=document.createElement('span'); timerSpan.className='thinking-timer'; timerSpan.innerHTML='<span class="spinner"></span><span class="timer-text">0.0s</span>'; header.appendChild(timerSpan); const contentDiv=document.createElement('div'); contentDiv.className='thinking-content'; const finalDiv=document.createElement('div'); finalDiv.className='final-answer'; thinkingBlock.appendChild(header); thinkingBlock.appendChild(contentDiv); bubble.appendChild(thinkingBlock); bubble.appendChild(finalDiv); chatArea.appendChild(div); header.onclick=()=>contentDiv.classList.toggle('collapsed'); scrollToBottom(); return { thinkingContent:contentDiv, finalAnswerDiv:finalDiv, messageDiv:div, timerSpan }; }
         function createPlainAssistantMessage(content){ const div=document.createElement('div'); div.className='message assistant'; const bubble=document.createElement('div'); bubble.className='bubble'; renderAssistantFinal(bubble,content); div.appendChild(bubble); chatArea.appendChild(div); scrollToBottom(); return div; }
         function showUserMessage(content, attachmentsList){ const div=document.createElement('div'); div.className='message user'; let html='<div class="bubble">'; if(attachmentsList && attachmentsList.length) attachmentsList.forEach(att=>{ if(att.type==='image' && att.preview) html+=`<img src="${att.preview}" class="image-preview">`; else html+=`<div style="background:rgba(238,242,255,0.5); padding:6px 10px; border-radius:12px; margin-bottom:8px;">📄 ${escapeHtml(att.name)}</div>`; }); if(content) html+=`<div>${formatMessageFinal(content)}</div>`; html+='</div>'; div.innerHTML=html; chatArea.appendChild(div); scrollToBottom(); }
-        async function sendMessageWithAttachment(text){ const q=text.trim(); if (!q && attachments.length===0) { showError('请输入文字或添加文件'); return; } showUserMessage(q, attachments); const filesPayload = attachments.map(att => ({ type: att.type, transfer_method: "local_file", upload_file_id: att.fileId })); attachments = []; updateAttachmentsUI(); if (currentAbortController) currentAbortController.abort(); currentAbortController = new AbortController(); try { await callAndStreamWithThinking(q || "请分析这些文件", filesPayload, currentAbortController.signal); } catch (e) { if (e.name !== 'AbortError') showError(e.message); } finally { if (currentAbortController && !currentAbortController.signal.aborted) currentAbortController = null; } }
+        async function sendMessageWithAttachment(text){ const q=text.trim(); if (!q && attachments.length===0) { showError('请输入文字或添加文件'); return; } showUserMessage(q, attachments); updateMessageCount(); const filesPayload = attachments.map(att => ({ type: att.type, transfer_method: "local_file", upload_file_id: att.fileId })); attachments = []; updateAttachmentsUI(); if (currentAbortController) currentAbortController.abort(); currentAbortController = new AbortController(); try { await callAndStreamWithThinking(q || "请分析这些文件", filesPayload, currentAbortController.signal); } catch (e) { if (e.name !== 'AbortError') showError(e.message); } finally { if (currentAbortController && !currentAbortController.signal.aborted) currentAbortController = null; updateMessageCount(); } }
         async function uploadAndAddAttachment(file){ if (!config.apiKey) { showError('请先配置 Dify API Key'); return false; } showError(`📎 上传中: ${file.name}`); try { const fd=new FormData(); fd.append('file',file,file.name); fd.append('user',currentUser?.username||'user'); const res=await fetch(`${config.apiEndpoint}/files/upload`,{method:'POST',headers:{'Authorization':`Bearer ${config.apiKey}`},body:fd}); if(!res.ok) throw new Error('上传失败'); const {id}=await res.json(); const type=file.type.startsWith('image/')?'image':'document'; let preview=null; if(type==='image'){ preview=await new Promise(resolve=>{ const reader=new FileReader(); reader.onload=e=>resolve(e.target.result); reader.readAsDataURL(file); }); } attachments.push({fileId:id,type,name:file.name,preview}); updateAttachmentsUI(); showError(`✅ 已添加: ${file.name}`); return true; } catch(err){ showError(`上传失败: ${err.message}`); return false; } }
         function updateAttachmentsUI(){ const container=document.getElementById('attachmentsContainer'); if(!container) return; if(attachments.length===0){ container.innerHTML=''; return; } let html='<div class="attachments-area">'; attachments.forEach((att,idx)=>{ const icon=att.type==='image'?'🖼️':'📄'; html+=`<div class="attachment-item" data-idx="${idx}">${icon} ${escapeHtml(att.name)}<button class="remove-attachment" data-idx="${idx}">✕</button></div>`; }); html+='</div>'; container.innerHTML=html; container.querySelectorAll('.remove-attachment').forEach(btn=>{ btn.addEventListener('click',(e)=>{ const idx=parseInt(btn.dataset.idx); if(!isNaN(idx)){ attachments.splice(idx,1); updateAttachmentsUI(); } }); }); }
         function bindBusinessButtons(){ document.querySelectorAll('.business-btn').forEach(btn=>btn.addEventListener('click',()=>{ const type=btn.getAttribute('data-type'); if(type) sendMessageWithAttachment(type); })); }
         function scrollToBottom(){ chatArea.scrollTop=chatArea.scrollHeight; }
+        // === 新增功能：消息计数、清空对话、导出聊天记录 ===
+        function updateMessageCount() {
+            const messages = chatArea.querySelectorAll('.message');
+            const countBar = document.getElementById('messageCountBar');
+            if (countBar) {
+                countBar.textContent = `共 ${messages.length} 条消息`;
+            }
+        }
+        function clearChatHistory() {
+            if (!confirm('确定要清空所有对话记录吗？此操作不可撤销。')) return;
+            const messages = chatArea.querySelectorAll('.message');
+            messages.forEach(msg => msg.remove());
+            conversationId = '';
+            updateMessageCount();
+            showError('✅ 对话已清空');
+        }
+        function exportChatHistory() {
+            const messages = chatArea.querySelectorAll('.message');
+            if (messages.length === 0) { showError('当前没有对话记录可导出'); return; }
+            let exportText = `小鲁班对话记录\n导出时间：${new Date().toLocaleString('zh-CN')}\n用户：${currentUser?.username || '未登录'}\n${'='.repeat(40)}\n\n`;
+            messages.forEach(msg => {
+                const isUser = msg.classList.contains('user');
+                const role = isUser ? '我' : '小鲁班';
+                const bubble = msg.querySelector('.bubble');
+                if (!bubble) return;
+                const text = bubble.innerText.trim();
+                if (text) exportText += `[${role}]\n${text}\n\n`;
+            });
+            const blob = new Blob([exportText], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `小鲁班对话记录_${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showError('✅ 对话记录已导出');
+        }
         function showError(msg){ const d=document.createElement('div'); d.className='message assistant'; d.innerHTML=`<div class="bubble" style="background:#fee2e2; color:#b91c1c;">⚠️ ${escapeHtml(msg)}</div>`; chatArea.appendChild(d); scrollToBottom(); setTimeout(()=>d.remove(),5000); }
         function loadConfig(){ const k=localStorage.getItem('dify_api_key'), e=localStorage.getItem('dify_endpoint'), i=localStorage.getItem('dify_instructions'); if(k) config.apiKey=k; if(e) config.apiEndpoint=e; if(i) config.instructions=i; document.getElementById('apiKeyInput').value=config.apiKey; document.getElementById('apiEndpointInput').value=config.apiEndpoint; document.getElementById('customInstructions').value=config.instructions; }
         function saveConfig(){ config.apiKey=document.getElementById('apiKeyInput').value.trim(); config.apiEndpoint=document.getElementById('apiEndpointInput').value.trim().replace(/\/$/,''); config.instructions=document.getElementById('customInstructions').value.trim(); localStorage.setItem('dify_api_key',config.apiKey); localStorage.setItem('dify_endpoint',config.apiEndpoint); localStorage.setItem('dify_instructions',config.instructions); document.getElementById('settingsModal').style.display='none'; showError('✅ 配置已保存'); }
@@ -1024,11 +1082,13 @@
         document.getElementById('closeUserBtn').onclick=()=>document.getElementById('userModal').style.display='none';
         document.getElementById('reRequestPermBtn').onclick=()=>reRequestPermissions();
         document.getElementById('themeToggleBtn').onclick=showThemeModal;
+        document.getElementById('clearChatBtn').onclick=clearChatHistory;
+        document.getElementById('exportChatBtn').onclick=exportChatHistory;
         document.getElementById('authSubmitBtn').onclick=handleAuthSubmit;
         document.getElementById('authSwitchBtn').onclick=()=>{ isLoginMode=!isLoginMode; updateAuthUI(); document.getElementById('authError').textContent=''; };
         document.addEventListener('click',(e)=>{ const menu=document.getElementById('plusMenu'); if(menu && !menu.contains(e.target) && e.target!==document.getElementById('plusBtn')) menu.classList.add('hidden'); });
         initTheme();
-        if(loadCurrentUser()){ updateUserUI(); loadConfig(); loadChatBackground(); setTimeout(()=>{ requestAllPermissions(); bindBusinessButtons(); },500); } else showAuthModal();
+        if(loadCurrentUser()){ updateUserUI(); loadConfig(); loadChatBackground(); updateMessageCount(); setTimeout(()=>{ requestAllPermissions(); bindBusinessButtons(); },500); } else showAuthModal();
     })();
 </script>
 </body>
