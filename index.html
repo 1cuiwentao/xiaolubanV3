@@ -697,30 +697,24 @@
     <div class="header">
         <div class="icon-area" id="bgSettingsBtn"><h1>🌏 小鲁班</h1></div>
         <div class="user-info">
-            <div class="user-avatar" id="userAvatar">👤</div>
-            <button class="user-btn" id="userMenuBtn">我的</button>
-            <button class="settings-btn" id="exportChatBtn" title="导出聊天记录">📤</button>
+            <div class="user-avatar" id="userMenuBtn" style="cursor:pointer;" title="个人中心">👤</div>
             <button class="settings-btn" id="clearChatBtn" title="清空对话">🗑️</button>
-            <button class="settings-btn" id="openSettingsBtn">⚙️</button>
-            <button class="settings-btn" id="themeToggleBtn" style="margin-left: 8px;">🎨 主题</button>
+            <button class="settings-btn" id="exportChatBtn" title="导出记录">📤</button>
+            <button class="settings-btn" id="openSettingsBtn" title="设置">⚙️</button>
+            <button class="settings-btn" id="themeToggleBtn" title="切换主题">🎨</button>
         </div>
     </div>
     <div class="chat-area" id="chatArea">
         <div class="message-count-bar" id="messageCountBar">共 0 条消息</div>
         <div class="message assistant">
             <div class="bubble">
-                👋 欢迎回来！<span id="welcomeUser"></span> 我是小鲁班，你的智能助手。 支持语音输入🎙️，点击➕展开拍照📷、文件📎、扫码📱功能。
-            </div>
-        </div>
-        <div class="message assistant">
-            <div class="bubble">
-                目前我主要支持以下五类功能：
+                👋 <span id="welcomeUser"></span>
                 <div class="business-buttons">
-                    <div class="business-btn" data-type="设备维修咨询">🔧 设备维修咨询</div>
-                    <div class="business-btn" data-type="资产信息查询">📦 资产信息查询</div>
-                    <div class="business-btn" data-type="流程制度查询">📋 流程制度查询</div>
-                    <div class="business-btn" data-type="巡检计划优化">📅 巡检计划优化</div>
-                    <div class="business-btn" data-type="备件库存健康度与预算报告">📊 备件库存健康度与预算报告</div>
+                    <div class="business-btn" data-type="设备维修咨询">🔧 设备维修</div>
+                    <div class="business-btn" data-type="资产信息查询">📦 资产查询</div>
+                    <div class="business-btn" data-type="流程制度查询">📋 流程制度</div>
+                    <div class="business-btn" data-type="巡检计划优化">📅 巡检计划</div>
+                    <div class="business-btn" data-type="备件库存健康度与预算报告">📊 库存预算</div>
                 </div>
             </div>
         </div>
@@ -728,7 +722,7 @@
     <div class="input-bar">
         <button class="action-btn" id="voiceBtn">🎙️</button>
         <button class="action-btn" id="plusBtn">➕</button>
-        <input type="text" class="text-input" id="textInput" placeholder="输入消息..." autocomplete="off">
+        <input type="text" class="text-input" id="textInput" placeholder="问点什么..." autocomplete="off">
         <button class="send-btn" id="sendBtn">➤</button>
         <div id="plusMenu" class="plus-menu hidden">
             <button id="cameraMenuBtn">📷</button>
@@ -739,7 +733,7 @@
 </div>
 
 <div id="permissionBanner" class="permission-banner" style="display: none;">
-    <span>⚠️ 麦克风或摄像头权限未授予，部分功能不可用</span>
+    <span>权限未授予，部分功能不可用</span>
     <button id="reRequestPermBtn">重新授权</button>
 </div>
 
@@ -760,10 +754,10 @@
 <!-- 用户中心模态框 -->
 <div id="userModal" class="user-modal" style="display: none;">
     <div class="user-modal-content">
-        <h2 style="margin-bottom: 20px;">👤 个人中心</h2>
+        <h2 style="margin-bottom: 16px;">个人中心</h2>
         <div class="user-detail">
-            <div><strong>用户名：</strong><span id="userDetailName"></span></div>
-            <div><strong>注册时间：</strong><span id="userRegTime"></span></div>
+            <div><span id="userDetailName"></span></div>
+            <div style="color:#94a3b8; font-size:0.8rem;">注册于 <span id="userRegTime"></span></div>
         </div>
         <button id="logoutBtn" class="logout-btn">退出登录</button>
         <button id="closeUserBtn" class="close-user-btn">关闭</button>
@@ -773,7 +767,7 @@
 <!-- 背景设置模态框 -->
 <div id="bgModal" class="bg-modal" style="display: none;">
     <div class="bg-modal-content">
-        <h2>🖼️ 聊天背景设置</h2>
+        <h2>聊天背景</h2>
         <div id="bgPreview" class="bg-preview"></div>
         <input type="file" id="bgImageInput" accept="image/*">
         <div class="button-group">
@@ -793,12 +787,12 @@
 <!-- 设置模态框 -->
 <div id="settingsModal" class="modal" style="display: none;">
     <div class="modal-content">
-        <h2>⚙️ 小鲁班配置</h2>
+        <h2>配置</h2>
         <input type="text" id="apiKeyInput" placeholder="API Key" autocomplete="off">
         <input type="text" id="apiEndpointInput" placeholder="API Base URL" value="https://api.dify.ai/v1">
         <textarea id="customInstructions" rows="3" placeholder="自定义指令（可选）"></textarea>
         <div class="button-group">
-            <button id="saveSettingsBtn" class="save-btn">保存配置</button>
+            <button id="saveSettingsBtn" class="save-btn">保存</button>
             <button id="closeModalBtn" class="close-modal">取消</button>
         </div>
     </div>
@@ -816,7 +810,7 @@
         function logout() { currentUser=null; localStorage.removeItem('dify_current_user'); showAuthModal(); document.getElementById('app').style.display='none'; }
         function loadCurrentUser() { const saved=localStorage.getItem('dify_current_user'); if(saved){ try{ const u=JSON.parse(saved); const users=getUsers(); if(users[u.username] && users[u.username].password===u.password) { currentUser={username:u.username,...users[u.username]}; return true; } }catch(e){} } return false; }
         function saveCurrentUser() { if(currentUser) localStorage.setItem('dify_current_user',JSON.stringify({username:currentUser.username,password:currentUser.password})); }
-        function updateUserUI() { if(currentUser){ document.getElementById('userAvatar').textContent=currentUser.avatar||currentUser.username[0].toUpperCase(); document.getElementById('welcomeUser').textContent=currentUser.username; document.getElementById('app').style.display='flex'; document.getElementById('authModal').style.display='none'; } }
+        function updateUserUI() { if(currentUser){ document.getElementById('userMenuBtn').textContent=currentUser.avatar||currentUser.username[0].toUpperCase(); document.getElementById('welcomeUser').textContent='你好，'+currentUser.username; document.getElementById('app').style.display='flex'; document.getElementById('authModal').style.display='none'; } }
         function showUserModal() { if(!currentUser) return; document.getElementById('userDetailName').textContent=currentUser.username; document.getElementById('userRegTime').textContent=currentUser.regTime||'未知'; document.getElementById('userModal').style.display='flex'; }
         let isLoginMode=true;
         function showAuthModal() { document.getElementById('authModal').style.display='flex'; document.getElementById('app').style.display='none'; document.getElementById('authError').textContent=''; document.getElementById('authUsername').value=''; document.getElementById('authPassword').value=''; isLoginMode=true; updateAuthUI(); }
@@ -871,7 +865,7 @@
             modal.className = 'modal';
             modal.innerHTML = `
                 <div class="modal-content">
-                    <h3>🎨 主题选择</h3>
+                    <h3>主题选择</h3>
                     <div class="theme-option" data-theme="light">☀️ 浅色模式</div>
                     <div class="theme-option" data-theme="dark">🌙 深色模式</div>
                     <div class="theme-option" data-theme="system">💻 跟随系统</div>
