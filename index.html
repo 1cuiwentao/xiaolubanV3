@@ -731,7 +731,7 @@
         <div class="message-count-bar" id="messageCountBar">共 0 条消息</div>
         <div class="message assistant">
             <div class="bubble">
-                👋 <span id="welcomeUser"></span>
+                👋 <span id="welcomeUser"></span>，我是小鲁班V3，现在支持以下功能，请点击以下按钮：
                 <div class="business-buttons">
                     <div class="business-btn" data-type="设备维修咨询">🔧 设备维修</div>
                     <div class="business-btn" data-type="资产信息查询">📦 资产查询</div>
@@ -833,7 +833,7 @@
         function logout() { currentUser=null; localStorage.removeItem('dify_current_user'); showAuthModal(); document.getElementById('app').style.display='none'; }
         function loadCurrentUser() { const saved=localStorage.getItem('dify_current_user'); if(saved){ try{ const u=JSON.parse(saved); const users=getUsers(); if(users[u.username] && users[u.username].password===u.password) { currentUser={username:u.username,...users[u.username]}; return true; } }catch(e){} } return false; }
         function saveCurrentUser() { if(currentUser) localStorage.setItem('dify_current_user',JSON.stringify({username:currentUser.username,password:currentUser.password})); }
-        function updateUserUI() { if(currentUser){ document.getElementById('userMenuBtn').textContent=currentUser.avatar||currentUser.username[0].toUpperCase(); document.getElementById('welcomeUser').textContent='你好，'+currentUser.username; document.getElementById('app').style.display='flex'; document.getElementById('authModal').style.display='none'; } }
+        function updateUserUI() { if(currentUser){ document.getElementById('userMenuBtn').textContent=currentUser.avatar||currentUser.username[0].toUpperCase(); document.getElementById('welcomeUser').textContent=currentUser.username; document.getElementById('app').style.display='flex'; document.getElementById('authModal').style.display='none'; } }
         function showUserModal() { if(!currentUser) return; document.getElementById('userDetailName').textContent=currentUser.username; document.getElementById('userRegTime').textContent=currentUser.regTime||'未知'; document.getElementById('userModal').style.display='flex'; }
         let isLoginMode=true;
         function showAuthModal() { document.getElementById('authModal').style.display='flex'; document.getElementById('app').style.display='none'; document.getElementById('authError').textContent=''; document.getElementById('authUsername').value=''; document.getElementById('authPassword').value=''; isLoginMode=true; updateAuthUI(); }
