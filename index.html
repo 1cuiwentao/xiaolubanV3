@@ -213,6 +213,29 @@
             color: #64748b;
         }
 
+        /* 自定义 tooltip */
+        .custom-tooltip {
+            position: fixed;
+            background: rgba(30, 41, 59, 0.92);
+            color: #f1f5f9;
+            font-size: 0.78rem;
+            padding: 5px 12px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 9999;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .custom-tooltip.visible {
+            opacity: 1;
+        }
+        [data-theme="dark"] .custom-tooltip {
+            background: rgba(226, 232, 240, 0.92);
+            color: #1e293b;
+        }
+
         /* 思考块样式（第一版） */
         .thinking-block {
             margin-bottom: 10px;
@@ -697,11 +720,11 @@
     <div class="header">
         <div class="icon-area" id="bgSettingsBtn"><h1>🌏 小鲁班</h1></div>
         <div class="user-info">
-            <div class="user-avatar" id="userMenuBtn" style="cursor:pointer;" title="个人中心">👤</div>
-            <button class="settings-btn" id="clearChatBtn" title="清空对话">🗑️</button>
-            <button class="settings-btn" id="exportChatBtn" title="导出记录">📤</button>
-            <button class="settings-btn" id="openSettingsBtn" title="设置">⚙️</button>
-            <button class="settings-btn" id="themeToggleBtn" title="切换主题">🎨</button>
+            <div class="user-avatar" id="userMenuBtn" style="cursor:pointer;" title="个人中心" data-tip="个人中心">👤</div>
+            <button class="settings-btn" id="clearChatBtn" title="清空对话" data-tip="清空对话">🗑️</button>
+            <button class="settings-btn" id="exportChatBtn" title="导出记录" data-tip="导出记录">📤</button>
+            <button class="settings-btn" id="openSettingsBtn" title="设置" data-tip="设置">️</button>
+            <button class="settings-btn" id="themeToggleBtn" title="切换主题" data-tip="切换主题">🎨</button>
         </div>
     </div>
     <div class="chat-area" id="chatArea">
@@ -720,14 +743,14 @@
         </div>
     </div>
     <div class="input-bar">
-        <button class="action-btn" id="voiceBtn">🎙️</button>
-        <button class="action-btn" id="plusBtn">➕</button>
+        <button class="action-btn" id="voiceBtn" data-tip="语音输入">🎙️</button>
+        <button class="action-btn" id="plusBtn" data-tip="更多功能">➕</button>
         <input type="text" class="text-input" id="textInput" placeholder="问点什么..." autocomplete="off">
-        <button class="send-btn" id="sendBtn">➤</button>
+        <button class="send-btn" id="sendBtn" data-tip="发送">➤</button>
         <div id="plusMenu" class="plus-menu hidden">
-            <button id="cameraMenuBtn">📷</button>
-            <button id="fileMenuBtn">📎</button>
-            <button id="qrMenuBtn">📱</button>
+            <button id="cameraMenuBtn" data-tip="拍照">📷</button>
+            <button id="fileMenuBtn" data-tip="上传文件">📎</button>
+            <button id="qrMenuBtn" data-tip="扫码">📱</button>
         </div>
     </div>
 </div>
@@ -1083,6 +1106,38 @@
         document.addEventListener('click',(e)=>{ const menu=document.getElementById('plusMenu'); if(menu && !menu.contains(e.target) && e.target!==document.getElementById('plusBtn')) menu.classList.add('hidden'); });
         initTheme();
         if(loadCurrentUser()){ updateUserUI(); loadConfig(); loadChatBackground(); updateMessageCount(); setTimeout(()=>{ requestAllPermissions(); bindBusinessButtons(); },500); } else showAuthModal();
+    })();
+    // ========== 自定义 Tooltip ==========
+    (function() {
+        const tip = document.createElement('div');
+        tip.className = 'custom-tooltip';
+        document.body.appendChild(tip);
+        let hideTimer = null;
+        function showTip(el, text) {
+            clearTimeout(hideTimer);
+            tip.textContent = text;
+            const rect = el.getBoundingClientRect();
+            tip.style.left = (rect.left + rect.width / 2 - tip.offsetWidth / 2) + 'px';
+            tip.style.top = (rect.bottom + 6) + 'px';
+            tip.classList.add('visible');
+        }
+        function hideTip() {
+            hideTimer = setTimeout(() => tip.classList.remove('visible'), 150);
+        }
+        // 桌面端：鼠标悬浮显示 title
+        document.querySelectorAll('[data-tip]').forEach(el => {
+            el.addEventListener('mouseenter', () => showTip(el, el.dataset.tip));
+            el.addEventListener('mouseleave', hideTip);
+        });
+        // 移动端：长按显示 title
+        let longPressTimer = null;
+        document.querySelectorAll('[data-tip]').forEach(el => {
+            el.addEventListener('touchstart', (e) => {
+                longPressTimer = setTimeout(() => showTip(el, el.dataset.tip), 400);
+            }, { passive: true });
+            el.addEventListener('touchend', () => { clearTimeout(longPressTimer); hideTip(); });
+            el.addEventListener('touchcancel', () => { clearTimeout(longPressTimer); hideTip(); });
+        });
     })();
 </script>
 </body>
